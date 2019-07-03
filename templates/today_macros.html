@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+    #customers {
+      font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    #customers td, #customers th {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+
+    #customers tr:nth-child(even){background-color: #f2f2f2;}
+
+    #customers tr:hover {background-color: #ddd;}
+
+    #customers th {
+      padding-top: 12px;
+      padding-bottom: 12px;
+      text-align: left;
+      background-color: #4CAF50;
+      color: white;
+    }
+    </style>    
+</head>
+<body>
+    <div>
+        {% if tdee_target %}
+        <h1>本週營養素目標</h1>
+        <p>蛋白質: {{tdee_target.t_protein}} g</p>
+        <p>碳水: {{tdee_target.t_carb}} g</p>
+        <p>脂肪: {{tdee_target.t_fat}} g</p>
+        <p>TDEE: {{tdee_target.t_tdee}} kcal</p>
+        <a href="/tdee">更新你的TDEE</a>
+        {% else %}
+        <h1>請先輸入你這週的目標TDEE</h1>
+        <a href="/tdee">輸入 本週TDEE</a>
+        {% endif %}
+    </div>
+    <h1>請輸入食物的營養素</h1>
+    <!-- 
+    1. adding HTML <form> to accept user's input from the front-end of our application
+    2. HTML <input> element is used to create interactive controls for web-based forms 
+    in order to accept data from the user
+      there are two designs show in front-end:
+        a.)text
+        b.)submit
+    -->
+    <form method="POST" action="/today_macros">
+        請輸入食物名字<br>
+        <input type="text" style="width:300px" name="food_name"> <!-- create an input for user to type some text -->
+<!--         <br>
+        請輸入食物重量(g)<br>
+        <input type="text" name="gram"> 
+ -->        
+        <br>
+        請輸入蛋白質(P)<br>
+        <input type="text" placeholder = '請輸入數字only喔!!' name="protein"> <!-- create an input for user to type some text -->
+        <br>
+        請輸入碳水(C)<br>
+        <input type="text" placeholder = '請輸入數字only喔!!' name="carb"> <!-- create an input for user to type some text -->
+        <br>
+        請輸入脂肪(F)<br>
+        <input type="text" placeholder = '請輸入數字only喔!!' name="fat"> <!-- create an input for user to type some text -->
+        <br>
+        請輸入熱量(kcal suggested)<br>
+        <input type="text" placeholder = '請輸入數字only喔!!' name="calorie"> <!-- create an input for user to type some text -->
+        <br>
+        <input type="submit" value="Add"> <!-- create an buttom named Add-->
+        <br>
+    </form>
+    <h1>今日 食物 營養素 分配</h1>
+    <table id="customers">
+        <tr>
+            <th>食品名稱</th>
+            <th>營養素</th>
+            <th>熱量(kcal)</th>
+            <th>刪除此食品</th>
+        </tr>
+        {% for food in foods %}
+        <!-- 
+        The <tr> defines a row of cells in a table, composed of 3  <td> (data cell):
+          1. user's input
+          2. update function
+          3. delete function
+        -->
+        <tr>
+            <td>
+                {{food.f_name}}
+            </td>
+            <td>
+                {{food.f_protein}}P{{food.f_carb}}C{{food.f_fat}}F
+            </td>
+            <td>
+                {{food.f_cal}} kcal
+            </td>
+            <td>
+            <form method="POST" action="./delete" style="display: inline">
+              <input type="hidden" value="{{food.f_name}}" name="food_name_deleted">
+              <input type="submit" value="Delete">
+            </form>
+            </td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td>
+                Total
+            </td>
+            <td>
+                {{total_p}}P{{total_c}}C{{total_f}}F
+            </td>
+            <td>
+                {{total_cal}} kcal
+            </td>
+            <td>
+                N.A.
+            </td>
+        </tr>
+    </table>
+    {% if tdee_target %}
+        <h1>剩餘營養素 : </h1>
+        {% if tdee_target.t_tdee - total_cal < 0 %}
+        <p>你今天的卡路里爆掉了啊!!</p>
+        <p id="remain_calorie"></p>
+        <p id="remain_p"></p>
+        <p id="remain_c"></p>
+        <p id="remain_f"></p>
+        <img src='../static/images.jpg' style="width:500px">
+        {% else %}
+        <p id="remain_calorie"></p>
+        <p id="remain_p"></p>
+        <p id="remain_c"></p>
+        <p id="remain_f"></p>
+        {% endif %}
+    {% endif %}
+    <div>
+        <a href="/">回到home page</a>
+    </div>
+    <script>
+    let remain_calorie = {{tdee_target.t_tdee}} - {{total_cal}}
+    let remain_p = {{tdee_target.t_protein}} - {{total_p}}
+    let remain_c = {{tdee_target.t_carb}} - {{total_c}}
+    let remain_f = {{tdee_target.t_fat}} - {{total_f}}
+
+    remain_calorie = '卡路里 : ' + remain_calorie.toString() + 'kcal'
+    remain_p = '剩餘蛋白質 : ' + remain_p.toString() + 'P'
+    remain_c = '剩餘碳水 : ' + remain_c.toString() + 'C'
+    remain_f = '剩餘脂肪 : ' + remain_f.toString() + 'F'
+
+    document.getElementById('remain_calorie').innerHTML=remain_calorie
+    document.getElementById('remain_p').innerHTML=remain_p
+    document.getElementById('remain_c').innerHTML=remain_c
+    document.getElementById('remain_f').innerHTML=remain_f
+    </script>
+</body>
+</html>
